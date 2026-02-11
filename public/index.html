@@ -1,336 +1,622 @@
-```html
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZenChat</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        zen: {
-                            50: '#f8fafc',
-                            100: '#f1f5f9',
-                            500: '#64748b',
-                            900: '#0f172a'
-                        }
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.3s ease-out',
-                        'slide-up': 'slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                        'typewriter': 'typewriter 2s steps(40) infinite alternate',
-                    },
-                    keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0', transform: 'translateY(10px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' }
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(20px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' }
-                        },
-                        typewriter: {
-                            '0%': { width: '0%' },
-                            '50%': { width: '100%' },
-                            '100%': { width: '0%' }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
-        }
-        *::-webkit-scrollbar {
-            width: 4px;
-        }
-        *::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        *::-webkit-scrollbar-thumb {
-            background: rgba(100, 116, 139, 0.3);
-            border-radius: 2px;
-        }
-        .message-bubble {
-            max-width: 80%;
-            animation: fade-in 0.3s ease-out;
-        }
-        .user-message {
-            margin-left: auto;
-        }
-        .ai-message {
-            margin-right: auto;
-        }
-        .typing-indicator span {
-            animation: blink 1.4s infinite both;
-        }
-        .typing-indicator span:nth-child(2) { animation-delay: .2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: .4s; }
-        @keyframes blink {
-            0%, 80%, 100% { opacity: 1; }
-            40% { opacity: 0; }
-        }
-        @media (max-width: 640px) {
-            .message-bubble {
-                max-width: 90%;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Habib AI</title>
+  <style>
+    :root {
+      --primary-color: #6366f1; /* Modern indigo */
+      --primary-hover: #4f46e5;
+      --secondary-color: #8b5cf6; /* Purple accent */
+      --light-bg: #f9fafb;
+      --border-color: #e5e7eb;
+      --text-color: #1e293b;
+      --text-light: #64748b;
+      --user-msg-bg: #dbeafe; /* Light blue */
+      --assistant-msg-bg: #f3f4f6;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 9999px;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.5;
+      color: var(--text-color);
+      background: linear-gradient(135deg, #f0f4ff 0%, #e6e9ff 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem;
+      padding-bottom: 3rem;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1rem;
+        padding-bottom: 2rem;
+      }
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      width: 100%;
+      max-width: 800px;
+      padding: 1rem 0;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 0.5rem;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.5rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+    }
+
+    @media (max-width: 640px) {
+      h1 {
+        font-size: 2rem;
+      }
+      .logo {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+      }
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      color: var(--text-light);
+      margin-top: 0.25rem;
+      font-weight: 500;
+    }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 800px;
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      height: calc(100vh - 220px);
+      min-height: 500px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 768px) {
+      .chat-container {
+        height: calc(100vh - 180px);
+        min-height: 400px;
+        border-radius: var(--radius-md);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .chat-container {
+        height: calc(100vh - 150px);
+        min-height: 350px;
+        border-radius: var(--radius-sm);
+      }
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      background-color: var(--light-bg);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      scroll-behavior: smooth;
+    }
+
+    /* Custom scrollbar */
+    .chat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .chat-messages::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: var(--radius-full);
+    }
+    
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: var(--radius-full);
+    }
+    
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .message {
+      display: flex;
+      align-items: flex-start;
+      max-width: 85%;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .user-message {
+      margin-left: auto;
+      flex-direction: row-reverse;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .user .avatar {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .assistant .avatar {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+    }
+
+    .message-content {
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-md);
+      position: relative;
+      max-width: 100%;
+    }
+
+    .user-message .message-content {
+      background-color: var(--user-msg-bg);
+      color: var(--text-color);
+      border-radius: var(--radius-md) 0 var(--radius-md) var(--radius-md);
+      margin-left: 0.75rem;
+    }
+
+    .assistant-message .message-content {
+      background-color: var(--assistant-msg-bg);
+      color: var(--text-color);
+      border-radius: 0 var(--radius-md) var(--radius-md) var(--radius-md);
+      margin-right: 0.75rem;
+    }
+
+    .message p {
+      white-space: pre-line;
+      margin: 0;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      color: var(--text-light);
+      font-style: italic;
+      margin-left: 48px;
+      margin-bottom: 0.5rem;
+      opacity: 0;
+      transform: translateY(5px);
+      transition: var(--transition);
+      height: 24px;
+    }
+
+    .typing-indicator.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--text-light);
+      border-radius: var(--radius-full);
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(0.8); opacity: 0.6; }
+      50% { transform: scale(1); opacity: 1; }
+    }
+
+    .message-input {
+      display: flex;
+      padding: 1rem;
+      border-top: 1px solid var(--border-color);
+      background-color: white;
+      position: relative;
+    }
+
+    #user-input {
+      flex: 1;
+      padding: 1rem 1.25rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      resize: none;
+      min-height: 56px;
+      max-height: 200px;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    #user-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    #user-input::placeholder {
+      color: var(--text-light);
+    }
+
+    #send-button {
+      margin-left: 0.75rem;
+      width: 48px;
+      min-width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      border: none;
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-md);
+      flex-shrink: 0;
+    }
+
+    #send-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 8px -2px rgba(0, 0, 0, 0.15);
+    }
+
+    #send-button:active {
+      transform: translateY(0);
+    }
+
+    #send-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    #send-button svg {
+      width: 20px;
+      height: 20px;
+      transition: var(--transition);
+    }
+
+    #send-button:hover svg {
+      transform: translateX(2px);
+    }
+
+    footer {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--text-light);
+      width: 100%;
+      max-width: 800px;
+      padding: 0.75rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 1.5rem;
+      background-color: #f8fafc;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+
+    @media (max-width: 640px) {
+      .message {
+        max-width: 95%;
+      }
+      
+      .typing-indicator {
+        margin-left: 12px;
+        margin-right: 12px;
+      }
+      
+      .message-input {
+        padding: 0.75rem;
+      }
+      
+      #user-input {
+        min-height: 48px;
+        padding: 0.875rem 1rem;
+      }
+      
+      #send-button {
+        width: 44px;
+        height: 44px;
+        margin-left: 0.5rem;
+      }
+      
+      .status-bar {
+        flex-direction: column;
+        gap: 4px;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        font-size: 0.7rem;
+      }
+    }
+
+    /* Message hover effect */
+    .message-content:hover {
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Focus visible for accessibility */
+    .focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-br from-zen-50 via-white to-slate-50 min-h-screen flex flex-col font-sans antialiased">
-    <!-- Header -->
-    <header class="bg-white/80 backdrop-blur-md border-b border-zen-100/50 sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center h-16">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                        </svg>
-                    </div>
-                    <h1 class="text-xl font-semibold text-zen-900">ZenChat</h1>
-                </div>
-                <div class="ml-auto flex items-center space-x-2">
-                    <button id="clearBtn" class="p-2 text-zen-500 hover:text-zen-900 hover:bg-zen-100 rounded-xl transition-all duration-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
+<body>
+  <header>
+    <div class="logo-container">
+      <div class="logo">H</div>
+      <div>
+        <h1>Habib AI</h1>
+        <h2>Your Intelligent Assistant</h2>
+      </div>
+    </div>
+  </header>
 
-    <!-- Main Chat Container -->
-    <main class="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Welcome Screen -->
-        <div id="welcomeScreen" class="flex-1 flex flex-col items-center justify-center text-center px-4">
-            <div class="w-24 h-24 bg-gradient-to-r from-indigo-500/20 to-purple-600/20 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
-                <svg class="w-12 h-12 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                </svg>
-            </div>
-            <h2 class="text-3xl md:text-4xl font-light text-zen-900 mb-4 leading-tight">
-                Hello, how can I help you today?
-            </h2>
-            <p class="text-zen-500 text-lg max-w-md leading-relaxed">
-                Ask me anything. I'm here to help with clear, thoughtful responses.
-            </p>
+  <div class="chat-container">
+    <div class="status-bar">
+      <div>Connected • Secure Chat</div>
+      <div>Response time: ~1s</div>
+    </div>
+    
+    <div id="chat-messages" class="chat-messages">
+      <div class="message assistant-message">
+        <div class="avatar assistant">H</div>
+        <div class="message-content">
+          <p>Hello! I'm Habib AI. I'm here to help you with any questions or tasks. How can I assist you today?</p>
         </div>
-
-        <!-- Chat Messages -->
-        <div id="chatContainer" class="flex-1 flex flex-col space-y-4 overflow-y-auto hidden pb-20 md:pb-24" style="scroll-behavior: smooth;">
-            <!-- Messages will be inserted here -->
-        </div>
-
-        <!-- Typing Indicator -->
-        <div id="typingIndicator" class="hidden animate-slide-up">
-            <div class="flex items-center space-x-2 bg-white/80 backdrop-blur-sm border border-zen-100 rounded-2xl p-4 max-w-xl shadow-xl">
-                <div class="flex space-x-1">
-                    <span class="w-2.5 h-2.5 bg-zen-500 rounded-full typing-indicator"></span>
-                    <span class="w-2.5 h-2.5 bg-zen-500 rounded-full typing-indicator"></span>
-                    <span class="w-2.5 h-2.5 bg-zen-500 rounded-full typing-indicator"></span>
-                </div>
-                <span class="text-zen-500 ml-2">ZenChat is typing...</span>
-            </div>
-        </div>
-    </main>
-
-    <!-- Input Area -->
-    <div class="bg-white/80 backdrop-blur-md border-t border-zen-100/50 px-4 sm:px-6 lg:px-8 pb-6 lg:pb-8 pt-4 sticky bottom-0 z-40">
-        <div class="max-w-4xl mx-auto">
-            <div class="flex items-end space-x-3">
-                <div class="flex-1 relative">
-                    <textarea
-                        id="messageInput"
-                        rows="1"
-                        placeholder="Type your message..."
-                        class="w-full resize-none px-4 py-3 pr-12 bg-white border border-zen-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all duration-200 text-zen-900 placeholder-zen-400 shadow-sm min-h-[44px] max-h-32"
-                    ></textarea>
-                    <button id="sendBtn" class="absolute right-3 bottom-3 p-1 rounded-xl text-zen-400 hover:text-indigo-500 hover:bg-indigo-50 transition-all duration-200 opacity-75 hover:opacity-100">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <p class="text-xs text-zen-400 mt-2 text-center">
-                ZenChat respects your privacy. Conversations are not stored.
-            </p>
-        </div>
+      </div>
     </div>
 
-    <script>
-        class ZenChat {
-            constructor() {
-                this.chatContainer = document.getElementById('chatContainer');
-                this.welcomeScreen = document.getElementById('welcomeScreen');
-                this.messageInput = document.getElementById('messageInput');
-                this.sendBtn = document.getElementById('sendBtn');
-                this.typingIndicator = document.getElementById('typingIndicator');
-                this.clearBtn = document.getElementById('clearBtn');
-                
-                this.init();
-            }
+    <div class="typing-indicator" id="typing-indicator">
+      <span>Habib is thinking</span>
+      <div class="typing-dots">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>
 
-            init() {
-                // Auto-resize textarea
-                this.messageInput.addEventListener('input', (e) => {
-                    e.target.style.height = 'auto';
-                    e.target.style.height = Math.min(e.target.scrollHeight, 128) + 'px';
-                });
+    <div class="message-input">
+      <textarea
+        id="user-input"
+        placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
+        rows="1"
+        autofocus
+      ></textarea>
+      <button id="send-button" aria-label="Send message">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L18 6M18 18L6 12L18 6M6 12V18"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
 
-                // Send message on Enter (without Shift)
-                this.messageInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        this.sendMessage();
-                    }
-                });
+  <footer>
+    <p>Habib AI © 2026 • Advanced Conversational Intelligence</p>
+  </footer>
 
-                this.sendBtn.addEventListener('click', () => this.sendMessage());
-                this.clearBtn.addEventListener('click', () => this.clearChat());
-
-                // Focus input on load
-                this.messageInput.focus();
-            }
-
-            async sendMessage() {
-                const message = this.messageInput.value.trim();
-                if (!message) return;
-
-                // Add user message
-                this.addMessage(message, 'user');
-                this.messageInput.value = '';
-                this.messageInput.style.height = 'auto';
-
-                // Show typing indicator
-                this.showTypingIndicator();
-
-                // Simulate AI response
-                await this.simulateTyping();
-                this.hideTypingIndicator();
-
-                // Add AI response
-                const response = await this.generateResponse(message);
-                this.addMessage(response, 'ai');
-            }
-
-            addMessage(text, sender) {
-                this.welcomeScreen.classList.add('hidden');
-                this.chatContainer.classList.remove('hidden');
-
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message-bubble p-4 rounded-2xl shadow-lg ${
-                    sender === 'user' 
-                        ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white user-message' 
-                        : 'bg-white border border-zen-100 ai-message'
-                }`;
-
-                const messageContent = document.createElement('div');
-                messageContent.className = 'prose prose-sm max-w-none leading-relaxed';
-                
-                // Break long lines for better readability
-                const formattedText = text.replace(/\n/g, '<br>');
-                messageContent.innerHTML = formattedText;
-
-                messageDiv.appendChild(messageContent);
-                this.chatContainer.appendChild(messageDiv);
-
-                // Scroll to bottom
-                this.scrollToBottom();
-            }
-
-            showTypingIndicator() {
-                this.typingIndicator.classList.remove('hidden');
-                this.scrollToBottom();
-            }
-
-            hideTypingIndicator() {
-                this.typingIndicator.classList.add('hidden');
-            }
-
-            async simulateTyping() {
-                return new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
-            }
-
-            async generateResponse(message) {
-                // Simple response logic - in production, replace with API call
-                const responses = [
-                    "That's an interesting question! Let me think about this for a moment.",
-                    "Great point. Here's my perspective on that:",
-                    "I understand what you're asking. Let me break this down for you:",
-                    "Excellent question! Here's what I think:",
-                    "That's a thoughtful question. My response would be:",
-                    "I appreciate you asking that. Here's my take:",
-                    "Very insightful! Let me share my thoughts:",
-                    "Good question! Here's my answer:"
-                ];
-
-                const responseStarters = responses[Math.floor(Math.random() * responses.length)];
-                const sampleResponses = [
-                    "In essence, the key is finding balance between innovation and practicality. What specific aspect interests you most?",
-                    "This depends on context, but generally speaking, consistency and clarity tend to yield the best results over time.",
-                    "A mindful approach works wonders here. Focus on understanding the fundamentals first, then build iteratively.",
-                    "Quality always trumps quantity. Prioritize depth of understanding over surface-level knowledge.",
-                    "The beauty lies in simplicity. Strip away complexity until only the essential remains.",
-                    "Patience is crucial. Progress compounds over time when you maintain steady, deliberate practice.",
-                    "Perspective matters most. Different angles reveal different truths about the same situation.",
-                    "Start with curiosity. Genuine questions lead to meaningful discoveries more reliably than assumptions."
-                ];
-
-                const fullResponse = `${responseStarters} ${sampleResponses[Math.floor(Math.random() * sampleResponses.length)]}`;
-
-                // Simulate streaming effect
-                let response = '';
-                const words = fullResponse.split(' ');
-                for (let i = 0; i < words.length; i++) {
-                    response += words[i] + ' ';
-                    // Update last message (AI message)
-                    const lastMessage = this.chatContainer.lastElementChild;
-                    if (lastMessage) {
-                        lastMessage.querySelector('.prose').innerHTML = response.replace(/\n/g, '<br>');
-                        this.scrollToBottom();
-                    }
-                    await new Promise(resolve => setTimeout(resolve, 30 + Math.random() * 50));
-                }
-
-                return fullResponse;
-            }
-
-            clearChat() {
-                this.chatContainer.innerHTML = '';
-                this.chatContainer.classList.add('hidden');
-                this.welcomeScreen.classList.remove('hidden');
-                this.messageInput.value = '';
-                this.messageInput.style.height = 'auto';
-                this.messageInput.focus();
-            }
-
-            scrollToBottom() {
-                this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
-            }
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const chatMessages = document.getElementById('chat-messages');
+      const userInput = document.getElementById('user-input');
+      const sendButton = document.getElementById('send-button');
+      const typingIndicator = document.getElementById('typing-indicator');
+      
+      // Auto-resize textarea
+      const autoResizeTextarea = () => {
+        userInput.style.height = 'auto';
+        userInput.style.height = Math.min(userInput.scrollHeight, 200) + 'px';
+      };
+      
+      userInput.addEventListener('input', autoResizeTextarea);
+      
+      // Initialize textarea height
+      setTimeout(autoResizeTextarea, 0);
+      
+      // Send message function
+      const sendMessage = () => {
+        const message = userInput.value.trim();
+        if (!message) return;
+        
+        // Add user message
+        addMessage(message, 'user');
+        
+        // Clear input and reset height
+        userInput.value = '';
+        userInput.style.height = '56px';
+        
+        // Show typing indicator
+        typingIndicator.classList.add('visible');
+        scrollToBottom();
+        
+        // Simulate AI response after delay
+        setTimeout(() => {
+          typingIndicator.classList.remove('visible');
+          
+          // Generate appropriate response based on user message
+          let response = "I'm Habib AI. How can I assist you further today?";
+          
+          if (message.toLowerCase().includes('hello') || message.toLowerCase().includes('hi')) {
+            response = "Hello there! How can I help you today?";
+          } else if (message.toLowerCase().includes('thank')) {
+            response = "You're welcome! Is there anything else I can help you with?";
+          } else if (message.toLowerCase().includes('bye') || message.toLowerCase().includes('goodbye')) {
+            response = "Goodbye! Feel free to come back anytime if you need assistance.";
+          } else if (message.toLowerCase().includes('help')) {
+            response = "I'm here to help with any questions you might have. You can ask me about almost anything - from general knowledge to specific tasks. What would you like to know?";
+          } else if (message.toLowerCase().includes('name')) {
+            response = "I'm Habib AI, your intelligent assistant designed to provide helpful information and support.";
+          }
+          
+          addMessage(response, 'assistant');
+          scrollToBottom();
+        }, 1000 + Math.random() * 1000); // Random delay between 1-2 seconds for realism
+      };
+      
+      // Add message to chat
+      const addMessage = (text, sender) => {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        messageDiv.classList.add(`${sender}-message`);
+        
+        // Create avatar
+        const avatarDiv = document.createElement('div');
+        avatarDiv.classList.add('avatar', sender);
+        avatarDiv.textContent = sender === 'user' ? 'U' : 'H';
+        
+        // Create message content
+        const messageContent = document.createElement('div');
+        messageContent.classList.add('message-content');
+        
+        const messageText = document.createElement('p');
+        // Simple link detection
+        messageText.innerHTML = text.replace(
+          /https?:\/\/[^\s]+/g, 
+          url => `<a href="${url}" target="_blank" style="color:var(--primary-color);text-decoration:underline">${url}</a>`
+        );
+        
+        messageContent.appendChild(messageText);
+        
+        // Append elements based on sender
+        if (sender === 'user') {
+          messageDiv.appendChild(messageContent);
+          messageDiv.appendChild(avatarDiv);
+        } else {
+          messageDiv.appendChild(avatarDiv);
+          messageDiv.appendChild(messageContent);
         }
-
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            new ZenChat();
-        });
-
-        // PWA-like behavior
-        window.addEventListener('load', () => {
-            // Preload animations
-            document.body.classList.add('animate-fade-in');
-        });
-    </script>
-
-	<!-- Chat app script -->
-		<script src="chat.js"></script>
+        
+        chatMessages.appendChild(messageDiv);
+      };
+      
+      // Scroll to bottom of chat
+      const scrollToBottom = () => {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      };
+      
+      // Send message on button click
+      sendButton.addEventListener('click', sendMessage);
+      
+      // Send message on Enter key (without Shift)
+      userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+      
+      // Initial scroll
+      scrollToBottom();
+      
+      // Focus management for accessibility
+      sendButton.addEventListener('focus', () => {
+        sendButton.classList.add('focus-visible');
+      });
+      
+      sendButton.addEventListener('blur', () => {
+        sendButton.classList.remove('focus-visible');
+      });
+      
+      userInput.addEventListener('focus', () => {
+        userInput.classList.add('focus-visible');
+      });
+      
+      userInput.addEventListener('blur', () => {
+        userInput.classList.remove('focus-visible');
+      });
+      
+      // Add welcome message after a short delay
+      setTimeout(() => {
+        scrollToBottom();
+      }, 300);
+    });
+  </script>
 </body>
 </html>
+
